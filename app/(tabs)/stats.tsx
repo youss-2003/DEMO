@@ -1,71 +1,106 @@
-import { View, Text, ScrollView } from 'react-native'
-import React from 'react'
-import ProjectCard from '../Components/ProjectCard'
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { Edit3, Trash } from 'lucide-react-native';
+import { usePostStore } from '../store/postStore';
+import clsx from 'clsx';
 
-export default function StatsScreen() {
+export default function PostsScreen() {
+  const { posts, fetchPosts, addPost, updatePost, deletePost } = usePostStore();
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [editId, setEditId] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handleSubmit = () => {
+    if (!title.trim() || !body.trim()) {
+      Alert.alert('Both title and body are required');
+      return;
+    }
+
+    if (editId !== null) {
+      updatePost({ id: editId, title, body });
+      setEditId(null);
+    } else {
+      addPost({ title, body });
+    }
+
+    setTitle('');
+    setBody('');
+  };
+
+  const handleEdit = (post: { id: number; title: string; body: string }) => {
+    setEditId(post.id);
+    setTitle(post.title);
+    setBody(post.body);
+  };
+
   return (
     <ScrollView className="flex-1 bg-[#F2F4FF] px-4 pt-6">
-      {/* Your Progress */}
-      <View className="mt-4">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="font-bold text-lg text-black">Your Progress</Text>
-          <Text className="text-indigo-500 font-medium">See Detail</Text>
-        </View>
+      {/* Header */}
+      <Text className="text-xl font-bold text-black mb-4">Manage Posts</Text>
 
-        <View className="bg-white rounded-2xl p-4 shadow-sm">
-          {/* Progress Bars */}
-          <View className="flex-row justify-between items-end px-1">
-            {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day, index) => (
-              <View key={index} className="items-center space-y-1">
-                <View className="w-3.5 h-24 bg-gray-200 rounded-md justify-end overflow-hidden">
-                  <View className="h-12 bg-indigo-400" />
-                </View>
-                <Text className="text-xs text-gray-500">{day}</Text>
-              </View>
-            ))}
-          </View>
+      {/* Input Card */}
+      <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+        <TextInput
+          placeholder="Title"
+          value={title}
+          onChangeText={setTitle}
+          className="border border-gray-200 rounded-xl px-4 py-2 mb-2 text-black"
+        />
+        <TextInput
+          placeholder="Body"
+          value={body}
+          onChangeText={setBody}
+          className="border border-gray-200 rounded-xl px-4 py-2 mb-4 text-black"
+        />
 
-          {/* Legend */}
-          <View className="flex-row justify-center mt-5 space-x-6">
-            <View className="flex-row items-center space-x-1">
-              <View className="w-3 h-3 rounded-full bg-gray-300" />
-              <Text className="text-xs text-gray-500">Planned</Text>
-            </View>
-            <View className="flex-row items-center space-x-1">
-              <View className="w-3 h-3 rounded-full bg-indigo-400" />
-              <Text className="text-xs text-gray-500">Completed</Text>
-            </View>
-          </View>
-        </View>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          className={clsx(
+            'rounded-full py-3 items-center',
+            editId ? 'bg-yellow-500' : 'bg-[#6C5DD3]'
+          )}
+        >
+          <Text className="text-white font-semibold text-base">
+            {editId ? 'Update Post' : 'Add Post'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Our Projects */}
-      <View className="mt-8">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="font-bold text-lg text-black">Our Projects</Text>
-          <Text className="text-indigo-500 font-medium">See Detail</Text>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row space-x-4">
-            <ProjectCard
-              title="Planning Trip"
-              tasks="12"
-              image="https://cdn-icons-png.flaticon.com/512/5988/5988313.png"
-              color="bg-sky-400"
-            />
-            <ProjectCard
-              title="Coding Games"
-              tasks="12"
-              image="https://static.vecteezy.com/system/resources/thumbnails/011/153/368/small_2x/3d-website-developer-working-on-laptop-illustration-png.png"
-              color="bg-indigo-400"
-            />
+      {/* Post List */}
+      {posts.map((post) => (
+        <View
+          key={post.id}
+          className="bg-white rounded-2xl px-4 py-3 mb-3 flex-row justify-between items-center shadow-sm"
+        >
+          <View className="flex-1 mr-4">
+            <Text className="text-black font-semibold">{post.title}</Text>
+            <Text className="text-gray-500">{post.body}</Text>
           </View>
-        </ScrollView>
-      </View>
 
-      {/* Spacer for tab bar */}
-      <View className="h-16" />
+          <View className="flex-row">
+            <TouchableOpacity onPress={() => handleEdit(post)} className="p-2">
+              <Edit3 color="#6C5DD3" size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => deletePost(post.id)} className="p-2">
+              <Trash color="#FF0000" size={18} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+
+      <View className="h-10" />
     </ScrollView>
-  )
+  );
 }
