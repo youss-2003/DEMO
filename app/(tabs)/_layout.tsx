@@ -75,7 +75,6 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{}} />
       <Tabs.Screen name="stats" options={{}} />
-      <Tabs.Screen name="add" options={{}} />
       <Tabs.Screen name="calendar" options={{}} />
       <Tabs.Screen name="profile" options={{}} />
     </Tabs>
